@@ -1,45 +1,57 @@
-from flask import Flask, render_template, request, jsonify
+import streamlit as st
+import pandas as pd
 import joblib
 import pickle
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
 
-vc_model = joblib.load(r'E:\Windows 10\Python Files\Projects\Diabetes prediction\vc_model.joblib')
-with open(r'E:\Windows 10\Python Files\Projects\Diabetes prediction\scaler.pkl','rb') as file:
+df = pd.read_csv('./diabetes.csv')
+df.drop(columns='Outcome',inplace=True)
+required_columns = df.columns
+
+with open('./scaler.pkl','rb') as file:
     scaler = pickle.load(file)
 
-app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return 'Diabetes prediction model is running'
+vc_model = joblib.load('./vc_model.jlb')
+rfc_model = joblib.load('./rfc_model.jlb')
 
-@app.route(rule='/predict', methods=['POST'])
-def predict():
-    try:
-        data = request.get_json()
-        
-        input_data = pd.DataFrame([data])
-        
-        if not data:
-            return jsonify({'error':'input data not provided'}), 400
-        
-        required_columns = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
-        
-        if not all(col in input_data.columns for col in required_columns):
-            return jsonify({'error':'Required columns missing. Required columns: '}), 400
-        
-        scaled_data = scaler.transform(input_data)
-        
-        prediction = vc_model.predict(scaled_data)
-        
-        response = {
-            'prediction': 'diabetes' if prediction[0] == 1 else 'no diabetes'
+
+
+st.title('Diabetes Prediction')
+
+with st.form('form'):
+    pregnances = st.number_input('Enter number of pregnancies')
+    glucose = st.number_input('Enter level of Glucose')
+    blood_pressure = st.number_input('Enter Blood Pressure')
+    skin_thikness = st.number_input('Enter thikness of skin')
+    insulin = st.number_input('Enter insulin level in blood')
+    bmi = st.number_input('Enter Body mass index')
+    diabetes_pedigree_function = st.number_input('Enter the Diabetes percentage')/100
+    age = st.number_input('Enter Age')
+    
+    button = st.form_submit_button('Predict')
+    
+    if button:
+        input_data = {
+            'Pregnancies':pregnances,
+            'Glucose':glucose,
+            'BloodPressure':blood_pressure,
+            'SkinThickness':skin_thikness,
+            'Insulin':insulin,
+            'BMI':bmi,
+            'DiabetesPedigreeFunction':diabetes_pedigree_function,
+            'Age':age
         }
-        return jsonify(response)
-    except Exception as e:
-        return jsonify({'error':str(e)}), 500
+        input_data = pd.DataFrame([input_data])
+        
+        if all([col in input_data.columns for col in required_columns]):
+            input_data_scaled = scaler.transform(input_data)
+            predict = vc_model.predict(input_data_scaled)
+            if predict:
+                st.success('You have diabetes') 
+            else:
+                st.success("You don't have Diabetes")
+        else:
+            st.warning(f'Required columns missing. required columns: {required_columns}')
 
-if __name__=='__main__':
-    app.run(debug=True)
+
+        st.dataframe(input_data)
