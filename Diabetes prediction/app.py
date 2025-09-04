@@ -14,7 +14,7 @@ with open('./scaler.pkl','rb') as file:
 vc_model = joblib.load('./vc_model.jlb')
 rfc_model = joblib.load('./rfc_model.jlb')
 
-
+input_data={}
 
 st.title('Diabetes Prediction')
 
@@ -25,7 +25,7 @@ with st.form('form'):
     skin_thikness = st.number_input('Enter thikness of skin')
     insulin = st.number_input('Enter insulin level in blood')
     bmi = st.number_input('Enter Body mass index')
-    diabetes_pedigree_function = st.number_input('Enter the Diabetes percentage')/100
+    diabetes_pedigree_function = st.number_input('Enter the Diabetes percentage*100')/100
     age = st.number_input('Enter Age')
     
     button = st.form_submit_button('Predict')
@@ -54,4 +54,4 @@ with st.form('form'):
             st.warning(f'Required columns missing. required columns: {required_columns}')
 
 
-        st.dataframe(input_data)
+st.dataframe(input_data, hide_index=True)
