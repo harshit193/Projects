@@ -72,4 +72,4 @@ if button:
         predict = rfr_model.predict(scaled_input_data)
         st.success(f'Predicted price is: {predict[0]:.2f}')
 
-st.dataframe(input_data)
+# st.dataframe(input_data)
